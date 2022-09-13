@@ -5403,7 +5403,8 @@ function! s:ToolParse(state, line) abort
     let a:state.mode = 'hunk'
     if has_key(a:state, 'from')
       let offsets = split(matchstr(a:line, '^@\+ \zs[-+0-9, ]\+\ze @'), ' ')
-      return s:ToolItems(a:state, a:state.from, a:state.to, offsets, matchstr(a:line, ' @@\+ \zs.*'))
+      let text = s:TxtToDex(offsets[0], '+', 'line') .  s:TxtToDex(offsets[1], '-', 'line')
+      return s:ToolItems(a:state, a:state.from, a:state.to, offsets, text)
     endif
   elseif a:line =~# '^\* Unmerged path .'
     let file = a:line[16:-1]
@@ -5431,6 +5432,17 @@ function! s:ToolParse(state, line) abort
   endif
   return []
 endfunction
+
+function s:TxtToDex(txt, pre, post)
+    let delta = matchstr(a:txt, ',\+\zs.*')
+    if delta ==# ''
+        return a:pre . '1 ' . a:post . '  '
+    elseif delta ==# '0'
+        return ''
+    else
+        return a:pre . delta . ' ' . a:post . 's  '
+    endif
+endfunc
 
 function! s:ToolStream(line1, line2, range, bang, mods, options, args, state) abort
   let i = 0
